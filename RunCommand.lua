@@ -10,6 +10,7 @@ local Selection = game:GetService("Selection")
 local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService") 
 local ScriptEditorService = game:GetService("ScriptEditorService")
+local StudioService = game:GetService("StudioService")
 local HttpService = game:GetService("HttpService")
 
 -- Plugin Visual Settings
@@ -99,25 +100,28 @@ runScriptFromSelectionButton.Click:Connect(function()
 	end
 end)
 
-local currentlyEditing: ScriptDocument?
-runScriptFromEditorButton.Click:Connect(function() 
-	if currentlyEditing and currentlyEditing:GetScript() then
-		ExecuteScript(currentlyEditing:GetScript() :: Script)
-	end
-end)
 
 -- Listens to when you are currently editing a script or not
-ScriptEditorService.TextDocumentDidOpen:Connect(function(newDocument: ScriptDocument)
-	currentlyEditing = newDocument
-	runScriptFromEditorButton.Enabled = true
+local currentlyEditing: LuaSourceContainer?
+StudioService:GetPropertyChangedSignal("ActiveScript"):Connect(function()
+
+	local newScript: LuaSourceContainer? = StudioService.ActiveScript
+
+	if not newScript then
+		runScriptFromEditorButton.Enabled = false
+	else
+		runScriptFromEditorButton.Enabled = true
+		currentlyEditing = newScript
+	end 
+	
 end)
 
-ScriptEditorService.TextDocumentDidClose:Connect(function(oldDocument: ScriptDocument) 
-	if currentlyEditing == oldDocument then
-		runScriptFromEditorButton.Enabled = false
-		currentlyEditing = nil
+runScriptFromEditorButton.Click:Connect(function() 
+	if currentlyEditing then
+		ExecuteScript(currentlyEditing :: Script)
 	end
 end)
+
 
 -- When you select a different objects enable run script button
 Selection.SelectionChanged:Connect(function()
