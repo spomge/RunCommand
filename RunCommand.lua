@@ -4,14 +4,15 @@ if plugin == nil then
 	return
 end
 
---// Services
+-- Services
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 local Selection = game:GetService("Selection")
 local RunService = game:GetService("RunService")
+local ServerScriptService = game:GetService("ServerScriptService") 
 local ScriptEditorService = game:GetService("ScriptEditorService")
 local HttpService = game:GetService("HttpService")
 
---// Plugin Visual Settings
+-- Plugin Visual Settings
 local toolbar = plugin:CreateToolbar("CDT Studio Tools")
 
 local openScriptButton: PluginToolbarButton = toolbar:CreateButton("Testing Open Script", "Open RunCommands", "rbxassetid://14978048121")
@@ -21,20 +22,19 @@ runScriptButton.ClickableWhenViewportHidden = true
 openScriptButton.ClickableWhenViewportHidden = true
 runScriptButton.Enabled = false
 
---// Creates a folder or fetches the current one 
+-- Creates a folder or fetches the current one 
 local function GetRunCommandFolder(): Folder
 
-	local runCommandFolder: Folder = game:GetService("ServerScriptService"):FindFirstChild("RunCommands") or Instance.new("Folder", game:GetService("ServerScriptService"))
+	local runCommandFolder: Folder = ServerScriptService:FindFirstChild("RunCommands") or Instance.new("Folder", ServerScriptService)
 	runCommandFolder.Name = "RunCommands"
 
 	return runCommandFolder
 
 end
 
---// Executes the script that is given to the function
+-- Executes the script that is given to the function
 local function ExecuteScript(selectedScript: Script)
 
-	local runCommandFolder: Folder = GetRunCommandFolder()
 	local newScript: ModuleScript = Instance.new("ModuleScript")
 
 	newScript.Name = HttpService:GenerateGUID()
@@ -54,10 +54,10 @@ local function ExecuteScript(selectedScript: Script)
 		end
 	end)
 
-	local success, runtimeErrorMessage = coroutine.resume(thread)
+	local success: boolean, runtimeErrorMessage: string = coroutine.resume(thread)
 
 	if not success then
-		warn(runtimeErrorMessage)
+		warn(selectedScript.Name, " got this error: ", runtimeErrorMessage)
 	end
 
 	while coroutine.status(thread) ~= "dead" do
@@ -78,7 +78,7 @@ end
 local function onRunScriptButtonClicked()
 	local selectedObjects: {Instance} = Selection:Get()
 
-	for _, selected in selectedObjects do
+	for _, selected: Instance in selectedObjects do
 		if selected:IsA("Script") then
 			ExecuteScript(selected)
 		end
@@ -100,11 +100,11 @@ local function onOpenScriptButtonClicked()
 	plugin:OpenScript(newScript)
 end
 
---// Fires respective functions on mouse clicks
+-- Fires respective functions on mouse clicks
 openScriptButton.Click:Connect(onOpenScriptButtonClicked)
 runScriptButton.Click:Connect(onRunScriptButtonClicked)
 
---// When you select a different objects enable run script button
+-- When you select a different objects enable run script button
 Selection.SelectionChanged:Connect(function()
 	local selectedObjects: {Instance} = Selection:Get()
 
