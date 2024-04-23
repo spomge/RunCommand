@@ -5,9 +5,7 @@ if plugin == nil then
 end
 
 -- Services
-local ChangeHistoryService = game:GetService("ChangeHistoryService")
 local Selection = game:GetService("Selection")
-local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService") 
 local ScriptEditorService = game:GetService("ScriptEditorService")
 local StudioService = game:GetService("StudioService")
@@ -45,7 +43,7 @@ local function ExecuteScript(selectedScript: Script)
 	newScript.Name = HttpService:GenerateGUID()
 
 	local wrapperCode = `\n return coroutine.create(function() {selectedScript.Source} end)`
-	ScriptEditorService:UpdateSourceAsync(newScript, function(oldContent: string)
+	ScriptEditorService:UpdateSourceAsync(newScript, function(_)
 		return wrapperCode
 	end)
 
